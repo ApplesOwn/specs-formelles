@@ -1,0 +1,31 @@
+const MaxA=3 // Nombre maximal d’avions,
+// vous pouvez augmenter ce nombre dans la question suivante
+const MaxF=2 // Nombre maximal de ressources pour faire le plein de kérosène, fuel
+const MaxG=2 // Nombre maximal de portes, gates
+const MaxP=2 // Nombre maximal de pistes
+const MaxT=2 // Nombre maximal de dispositifs pour le contrôle technique
+range IA=1..MaxA
+range IF = 1..MaxF
+range IG = 1..MaxG
+range IP = 1..MaxP
+range IT=1..MaxT
+
+FUEL = FUEL[1],
+	FUEL[i:IF] = (fuel[i].acquire -> fuel[i].free -> FUEL).
+
+GATE = GATE[1],
+	GATE[i:IG] = (gate[i].acquire -> gate[i].free -> GATE).
+
+PISTE = PISTE[1],
+	PISTE[i:IP] = (lane[i].acquire -> lane[i].free -> PISTE).
+
+TECHNIQUE = TECHNIQUE[1],
+	TECHNIQUE[i:IT] = (tech[i].acquire -> tech[i].free -> TECHNIQUE).
+
+// QUESTION 2
+AVION = AVION[1],
+	AVION[i:IA] = (ATTERRIR | DECOLLER),
+	ATTERRIR = (arrive -> atterrit -> debarque_passagers -> gare -> DECOLLER),
+	DECOLLER = (sort -> technique -> plein -> embarque -> DECOLLER).
+
+||AVION_RESS = (AVION || FUEL || GATE)
