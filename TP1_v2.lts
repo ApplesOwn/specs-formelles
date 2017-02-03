@@ -1,0 +1,64 @@
+const MaxA=2 // Nombre maximal d’avions,
+// vous pouvez augmenter ce nombre dans la question suivante
+const MaxF=1 // Nombre maximal de ressources pour faire le plein de kérosène, fuel
+const MaxG=1 // Nombre maximal de portes, gates
+const MaxP=1 // Nombre maximal de pistes
+const MaxT=1 // Nombre maximal de dispositifs pour le contrôle technique
+range IA=1..MaxA
+range IF = 1..MaxF
+range IG = 1..MaxG
+range IP = 1..MaxP
+range IT=1..MaxT
+
+
+//Q1
+FUEL = (fuel_acquerir -> fuel_liberer -> FUEL).
+GATE = (gate_acquerir -> gate_liberer -> GATE).
+PISTE = (piste_acquerir -> piste_liberer -> PISTE).
+TECHNIQUE = (technique_acquerir -> technique_liberer -> TECHNIQUE).
+
+||FUELS = [i:IF]:FUEL.
+||GATES = [i:IG]:GATE.
+||PISTES = [i:IP]:PISTE.
+||TECHNIQUES = [i:IT]:TECHNIQUE.
+
+//Q2
+
+//AVION = (arrive -> [i:IP].piste_aquerir -> atterit -> [i].piste_liberer
+  //      -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare -> AVION
+	//	| sort -> [i:IT].technique_acquerir -> [i].technique_liberer
+	//	-> [j:IF].fuel_acquerir -> [j].fuel_liberer
+      //  -> [k:IG].gate_acquerir -> embarque_passagers -> [k].gate_liberer
+       // -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer -> AVION).
+
+AVION = (arrive -> ATTERRIR |sort -> DECOLLER),
+  ATTERRIR = ([i:IP].piste_aquerir -> atterit -> [i].piste_liberer
+        -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare -> DECOLLER),
+  DECOLLER = ([i:IT].technique_acquerir -> [i].technique_liberer
+		-> [j:IF].fuel_acquerir -> [j].fuel_liberer
+        -> [k:IG].gate_acquerir -> embarque_passagers -> [k].gate_liberer
+        -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer -> ATTERRIR).
+
+||AVIONS = [i:IA]:AVION.
+
+//Q3
+property Psur = (arrive -> atterit -> debarque_passagers -> se_gare -> Psur 
+ | sort -> technique_acquerir -> fuel_acquerir -> fuel_liberer -> embarque_passagers -> decolle  -> Psur).
+
+|| Csur = (AVIONS || Psur).
+
+
+//Q4
+
+
+||AEROPORT1 = ({FUELS,GATES,PISTES,TECHNIQUES}::Csur).
+
+//Q5
+property Pfuel = ().
+
+
+
+
+
+
+
