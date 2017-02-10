@@ -1,9 +1,9 @@
-const MaxA=2 // Nombre maximal d’avions,
+const MaxA=2 // Nombre maximal dâ€™avions,
 // vous pouvez augmenter ce nombre dans la question suivante
-const MaxF=1 // Nombre maximal de ressources pour faire le plein de kérosène, fuel
+const MaxF=1 // Nombre maximal de ressources pour faire le plein de kÃ©rosÃ¨ne, fuel
 const MaxG=1 // Nombre maximal de portes, gates
 const MaxP=1 // Nombre maximal de pistes
-const MaxT=1 // Nombre maximal de dispositifs pour le contrôle technique
+const MaxT=1 // Nombre maximal de dispositifs pour le contrÃ´le technique
 range IA=1..MaxA
 range IF = 1..MaxF
 range IG = 1..MaxG
@@ -68,7 +68,7 @@ Acquerir[n:0..MaxT] = (when (n < MaxT) [i:IA].[j:IT].technique_acquerir -> Acque
 
 ||Test1 = (Aeroport1 || CheckFuels || CheckGates || CheckPistes || CheckTechniques).
 
-// Q6 à vérifier
+// Q6 Ã  vÃ©rifier
 ||Aeroport2 = (Avions || [k:IA]::Gates ||[l:IA]::Pistes || Psur || Csur).
 
 ||Test2 = (Aeroport2 || CheckGates || CheckPistes).
@@ -117,4 +117,12 @@ PAvion[i:0..1] = (when (i == 1)[o:IA].authorisation_acquerir -> [o].authorisatio
 
 ||Test3 = (Aeroport3 || CheckFuels || CheckGates || CheckPistes || CheckTechniques).
 
+// Question 8
+progress ATTERIT = {[i:IA].atterit}
+progress DECOLLE = {[i:IA].decolle}
 
+||TEST_AEROPORT_WITH_PRIORITY = (Avions2 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
+	|| Psur2 || Csur2 || Authorisation)
+	<< {[i:IA].atterit}. 
+
+// Question 9
