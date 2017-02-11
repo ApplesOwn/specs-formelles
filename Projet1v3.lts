@@ -1,8 +1,8 @@
 const MaxA=2 // Nombre maximal d’avions,
 // vous pouvez augmenter ce nombre dans la question suivante
 const MaxF=1 // Nombre maximal de ressources pour faire le plein de kérosène, fuel
-const MaxG=1 // Nombre maximal de portes, gates
-const MaxP=1 // Nombre maximal de pistes
+const MaxG=2 // Nombre maximal de portes, gates
+const MaxP=2 // Nombre maximal de pistes
 const MaxT=1 // Nombre maximal de dispositifs pour le contrôle technique
 range IA=1..MaxA
 range IF = 1..MaxF
@@ -37,7 +37,7 @@ property Psur = PAvion[0],
 PAvion[i:0..1] = (when (i == 1)[o:IA].arrive -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
         -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
         -> [o].se_gare -> PAvion[0]
-		| when (i == 0) [o:IA].sort -> [o].technique_acquerir -> [o].technique_liberer
+		| when (i == 0) [o:IA].sort -> [o].[n:IT].technique_acquerir -> [o].[n].technique_liberer
 		-> [o].[j:IF].fuel_acquerir -> [o].[j].fuel_liberer
         -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
         -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
@@ -46,7 +46,7 @@ Csur = PAvion[0],
 PAvion[i:0..1] = (when (i == 1)[o:IA].arrive -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
         -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
         -> [o].se_gare -> PAvion[0]
-		| when (i == 0) [o:IA].sort -> [o].technique_acquerir -> [o].technique_liberer
+		| when (i == 0) [o:IA].sort -> [o].[n:IT].technique_acquerir -> [o].[n].technique_liberer
 		-> [o].[j:IF].fuel_acquerir -> [o].[j].fuel_liberer
         -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
         -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
@@ -69,14 +69,42 @@ Acquerir[n:0..MaxT] = (when (n < MaxT) [i:IA].[j:IT].technique_acquerir -> Acque
 ||Test1 = (Aeroport1 || CheckFuels || CheckGates || CheckPistes || CheckTechniques).
 
 // Q6 à vérifier
-||Aeroport2 = (Avions || [k:IA]::Gates ||[l:IA]::Pistes || Psur || Csur).
+
+Avion2(N=0) = Avion[N],
+Avion[1] = (arrive -> [i:IP].piste_acquerir -> atterit -> [i].piste_liberer
+        -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare -> Avion[0]),
+Avion[0] =  (sort -> technique_acquerir -> technique_liberer
+		-> fuel_acquerir -> fuel_liberer
+        -> [k:IG].gate_acquerir -> embarque_passagers -> [k].gate_liberer
+        -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer -> Avion[1]).
+||Avions2 = [i:IA]:Avion2.
+
+property Psur2 = PAvion[0],
+PAvion[i:0..1] = (when (i == 1)[o:IA].arrive -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
+        -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
+        -> [o].se_gare -> PAvion[0]
+		| when (i == 0) [o:IA].sort -> [o].technique_acquerir -> [o].technique_liberer
+		-> [o].fuel_acquerir -> [o].fuel_liberer
+        -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
+        -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
+
+Csur2 = PAvion[0],
+PAvion[i:0..1] = (when (i == 1)[o:IA].arrive -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
+        -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
+        -> [o].se_gare -> PAvion[0]
+		| when (i == 0) [o:IA].sort -> [o].technique_acquerir -> [o].technique_liberer
+		-> [o].fuel_acquerir -> [o].fuel_liberer
+        -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
+        -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
+
+||Aeroport2 = (Avions2 || [k:IA]::Gates ||[l:IA]::Pistes || Psur2 || Csur2).
 
 ||Test2 = (Aeroport2 || CheckGates || CheckPistes).
 
 //Q7
 Authorisation = (authorisation_acquerir -> authorisation_liberer -> Authorisation).
 
-Avion2(N=0) = Avion[N],
+Avion3(N=0) = Avion[N],
 Avion[1] = (authorisation_acquerir -> authorisation_liberer -> arrive 
         -> [i:IP].piste_acquerir -> atterit -> [i].piste_liberer
         -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare -> Avion[0]),
@@ -87,32 +115,32 @@ Avion[0] =  (authorisation_acquerir -> authorisation_liberer -> sort
         -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer -> Avion[1]).
 
 
-||Avions2 = [i:IA]:Avion2.
+||Avions3 = [i:IA]:Avion3.
 
-property Psur2 = PAvion[0],
+property Psur3 = PAvion[0],
 PAvion[i:0..1] = (when (i == 1)[o:IA].authorisation_acquerir -> [o].authorisation_liberer -> [o].arrive 
         -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
         -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
         -> [o].se_gare -> PAvion[0]
 		| when (i == 0) [o:IA].authorisation_acquerir -> [o].authorisation_liberer -> [o].sort 
-        -> [o].technique_acquerir -> [o].technique_liberer
+        -> [o].[n:IT].technique_acquerir -> [o].[n].technique_liberer
 		-> [o].[j:IF].fuel_acquerir -> [o].[j].fuel_liberer
         -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
         -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
 
-Csur2 = PAvion[0],
+Csur3 = PAvion[0],
 PAvion[i:0..1] = (when (i == 1)[o:IA].authorisation_acquerir -> [o].authorisation_liberer -> [o].arrive 
         -> [o].[j:IP].piste_acquerir -> [o].atterit -> [o].[j].piste_liberer
         -> [o].[k:IG].gate_acquerir -> [o].debarque_passagers -> [o].[k].gate_liberer 
         -> [o].se_gare -> PAvion[0]
 		| when (i == 0) [o:IA].authorisation_acquerir -> [o].authorisation_liberer -> [o].sort 
-        -> [o].technique_acquerir -> [o].technique_liberer
+        -> [o].[n:IT].technique_acquerir -> [o].[n].technique_liberer
 		-> [o].[j:IF].fuel_acquerir -> [o].[j].fuel_liberer
         -> [o].[k:IG].gate_acquerir -> [o].embarque_passagers -> [o].[k].gate_liberer
         -> [o].[m:IP].piste_acquerir -> [o].decolle -> [o].[m].piste_liberer -> PAvion[1]).
 
-||Aeroport3 = (Avions2 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
-|| Psur2 || Csur2 || Authorisation).
+||Aeroport3 = (Avions3 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
+|| Psur3 || Csur3 || Authorisation).
 
 
 ||Test3 = (Aeroport3 || CheckFuels || CheckGates || CheckPistes || CheckTechniques).
@@ -121,8 +149,50 @@ PAvion[i:0..1] = (when (i == 1)[o:IA].authorisation_acquerir -> [o].authorisatio
 progress ATTERIT = {[i:IA].atterit}
 progress DECOLLE = {[i:IA].decolle}
 
-||TEST_AEROPORT_WITH_PRIORITY = (Avions2 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
+||TEST_AEROPORT_PROGRESS = (Avions2 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
+	|| Psur2 || Csur2 || Authorisation).
+
+||TEST_AEROPORT_PROGRESS_WITH_PRIORITY = (Avions2 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
 	|| Psur2 || Csur2 || Authorisation)
 	<< {[i:IA].atterit}. 
 
 // Question 9
+
+const MaxAvion = 10
+set VarAlpha = { valeur.{ lit[T], ecrit[T], obtient, rend } }
+
+COUNTER = COUNTER[0],
+COUNTER[u:T] = (lit[u] -> VAR[u]
+| ecrit[v:T] -> VAR[v]).
+
+LOCK = ( obtient -> rend -> LOCK ).
+
+||LOCK_VAR = ( LOCK || VAR ).
+
+
+
+Authorisation = (authorisation_acquerir -> authorisation_liberer -> Authorisation).
+
+DEBUT = (debut -> valeur.obtient -> valeur.ecrit[0] -> valeur.rend).
+
+Avion4(N=0) = debut -> Avion[N],
+Avion[1] = (authorisation_acquerir -> authorisation_liberer -> arrive 
+        -> [i:IP].piste_acquerir -> atterit -> [i].piste_liberer
+        -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare 
+		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x][0]),
+Avion[0] =  (authorisation_acquerir -> authorisation_liberer -> sort 
+        -> [i:IT].technique_acquerir -> [i].technique_liberer
+		-> [j:IF].fuel_acquerir -> [j].fuel_liberer
+        -> [k:IG].gate_acquerir -> embarque_passagers -> [k].gate_liberer
+        -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer ->  valeur.obtient -> valeur.lit[x:T] 
+		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x][1]),
+
+INCREMENTE[x:T][y:0..1] = ( when(x==MaxAvion) complet
+-> valeur.rend
+-> Avion[y]
+| when(x<MaxAvion) entre
+-> valeur.ecrit[x+1]
+-> valeur.rend
+-> Avion[y]).
+
+||Aeroport4 = ()/{debut/[i:IA].debut, fin/[i:IA].fin, analyse/[i:IA].analyse}.
