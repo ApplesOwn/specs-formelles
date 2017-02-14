@@ -1,8 +1,8 @@
 const MaxA=2 // Nombre maximal d’avions,
 // vous pouvez augmenter ce nombre dans la question suivante
 const MaxF=1 // Nombre maximal de ressources pour faire le plein de kérosène, fuel
-const MaxG=2 // Nombre maximal de portes, gates
-const MaxP=2 // Nombre maximal de pistes
+const MaxG=1 // Nombre maximal de portes, gates
+const MaxP=1 // Nombre maximal de pistes
 const MaxT=1 // Nombre maximal de dispositifs pour le contrôle technique
 range IA=1..MaxA
 range IF = 1..MaxF
@@ -142,8 +142,12 @@ PAvion[i:0..1] = (when (i == 1)[o:IA].authorisation_acquerir -> [o].authorisatio
 ||Aeroport3 = (Avions3 || [j:IA]::Fuels || [k:IA]::Gates ||[l:IA]::Pistes || [m:IA]::Techniques 
 || Psur3 || Csur3 || Authorisation).
 
+property CheckAuthorisations = Acquerir[0],
+Acquerir[n:0..1] = (when (n == 0) [i:IA].authorisation_acquerir -> Acquerir[1]
+					 | when (n == 1) [k:IA].authorisation_liberer -> Acquerir[0]).
 
-||Test3 = (Aeroport3 || CheckFuels || CheckGates || CheckPistes || CheckTechniques).
+
+||Test3 = (Aeroport3 || CheckFuels || CheckGates || CheckPistes || CheckTechniques || CheckAuthorisations).
 
 // Question 8
 progress ATTERIT = {[i:IA].atterit}
@@ -158,41 +162,70 @@ progress DECOLLE = {[i:IA].decolle}
 
 // Question 9
 
-const MaxAvion = 10
+range T = 0..MaxA
 set VarAlpha = { valeur.{ lit[T], ecrit[T], obtient, rend } }
 
 COUNTER = COUNTER[0],
-COUNTER[u:T] = (lit[u] -> VAR[u]
-| ecrit[v:T] -> VAR[v]).
+COUNTER[u:T] = (lit[u] -> COUNTER[u]
+| ecrit[v:T] -> COUNTER[v]).
 
 LOCK = ( obtient -> rend -> LOCK ).
 
-||LOCK_VAR = ( LOCK || VAR ).
+||LOCK_VAR = ( LOCK || COUNTER ).
 
 
 
-Authorisation = (authorisation_acquerir -> authorisation_liberer -> Authorisation).
+//Authorisation = (authorisation_acquerir -> authorisation_liberer -> Authorisation).
 
-DEBUT = (debut -> valeur.obtient -> valeur.ecrit[0] -> valeur.rend).
+//DEBUT = (debut -> valeur.obtient -> valeur.ecrit[0] -> valeur.rend).
 
-Avion4(N=0) = debut -> Avion[N],
+Avion4(N=0) = Avion[N],
 Avion[1] = (authorisation_acquerir -> authorisation_liberer -> arrive 
         -> [i:IP].piste_acquerir -> atterit -> [i].piste_liberer
         -> [j:IG].gate_acquerir -> debarque_passagers -> [j].gate_liberer -> se_gare 
-		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x][0]),
+		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x]),
 Avion[0] =  (authorisation_acquerir -> authorisation_liberer -> sort 
-        -> [i:IT].technique_acquerir -> [i].technique_liberer
-		-> [j:IF].fuel_acquerir -> [j].fuel_liberer
+        -> technique_acquerir -> technique_liberer
+		-> fuel_acquerir -> fuel_liberer
         -> [k:IG].gate_acquerir -> embarque_passagers -> [k].gate_liberer
-        -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer ->  valeur.obtient -> valeur.lit[x:T] 
-		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x][1]),
+        -> [m:IP].piste_acquerir -> decolle -> [m].piste_liberer
+		-> valeur.obtient -> valeur.lit[x:T] -> INCREMENTE[x]),
 
-INCREMENTE[x:T][y:0..1] = ( when(x==MaxAvion) complet
--> valeur.rend
--> Avion[y]
-| when(x<MaxAvion) entre
--> valeur.ecrit[x+1]
--> valeur.rend
--> Avion[y]).
+	INCREMENTE[x:T] = ( when(x == MaxA-1) complet
+		->analyse
+		->fin
+		->debut
+		->valeur.obtient
+		->valeur.ecrit[0]
+		->valeur.rend
+		-> Avion4
+	| when(x < MaxA-1) entre
+		-> valeur.ecrit[x+1]
+		-> valeur.rend
+		-> Avion4)
++ VarAlpha.
 
-||Aeroport4 = ()/{debut/[i:IA].debut, fin/[i:IA].fin, analyse/[i:IA].analyse}.
+||Aeroport4 = ([i:IA]:Avion4 || [k:IA]::Gates ||[l:IA]::Pistes 
+|| Authorisation || [IA]::valeur:LOCK_VAR)/{debut/[n:IA].debut, fin/[o:IA].fin, analyse/[p:IA].analyse}.
+
+
+||Test4 = (Aeroport4 || CheckGates || CheckPistes || CheckAuthorisations ).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
